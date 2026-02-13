@@ -1,0 +1,20 @@
+# Build results
+bin/
+obj/
+out/
+
+# IDE
+.idea/
+.vs/
+*.user
+*.suo
+
+# NuGet
+*.nupkg
+.nuget/
+packages/
+
+# User secrets (copy appsettings.example.json to appsettings.json and add your Atlas credentials)
+appsettings.json
+appsettings.*.local.json
+secrets.json
