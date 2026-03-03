@@ -1,0 +1,50 @@
+# AI Agent Instructions & Guardrails
+
+This document contains the guardrails and guidelines that AI agents MUST follow when building this project.
+
+---
+
+## Project Overview
+
+- This is a **sample demo project** — not production code
+- Purpose: Demonstrate MongoDB features and technology in a Spring/Spring Boot context
+
+---
+
+## Technology Stack (Required)
+
+- **Spring** and **Spring Boot**
+- **MongoDB** (preferably MongoDB Atlas for cloud features)
+
+---
+
+## Core Guardrails
+
+1. **Keep everything simple** — Avoid over-engineering; favor clarity and minimal viable implementations
+2. **Focus on MongoDB** — The demo must showcase MongoDB-specific features and capabilities
+3. **Use AI integrations** that work well with MongoDB and Spring
+4. **Use the MongoDB Atlas API** to leverage **Voyage AI** models for embeddings and vector operations
+
+---
+
+## Sample Use Cases (Start With These Two)
+
+### 1. IoT Use Case
+- Demonstrate MongoDB features relevant to IoT (e.g., time-series data, sensor readings, device telemetry)
+- Keep the data model and flows simple
+- Show how Spring Boot integrates with MongoDB for IoT-style workloads
+
+### 2. Vector Search Use Case
+- Demonstrate MongoDB Atlas Vector Search
+- Use Voyage AI models via the MongoDB Atlas API for generating embeddings
+- Show semantic search or similarity search patterns
+- Keep the implementation minimal and easy to follow
+
+---
+
+## General Principles
+
+- Prefer simplicity over completeness
+- Document key decisions and setup steps
+- Use standard Spring Boot conventions
+- Leverage MongoDB-native features rather than generic abstractions
