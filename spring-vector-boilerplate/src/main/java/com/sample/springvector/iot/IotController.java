@@ -25,12 +25,19 @@ public class IotController {
     private final SensorReadingRepository repository;
     private final MongoTemplate mongoTemplate;
     private final IngestionDemoService ingestionDemoService;
+    private final IotStatsService statsService;
 
     public IotController(SensorReadingRepository repository, MongoTemplate mongoTemplate,
-                         IngestionDemoService ingestionDemoService) {
+                         IngestionDemoService ingestionDemoService, IotStatsService statsService) {
         this.repository = repository;
         this.mongoTemplate = mongoTemplate;
         this.ingestionDemoService = ingestionDemoService;
+        this.statsService = statsService;
+    }
+
+    @GetMapping("/stats")
+    public IotStatsService.IotStats getStats() {
+        return statsService.getStats();
     }
 
     @PostMapping("/readings/batch")

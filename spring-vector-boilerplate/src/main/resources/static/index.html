@@ -240,6 +240,23 @@
             color: var(--text-muted);
         }
         .radio-label:has(input:checked) { color: var(--text); }
+        .iot-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+        @media (max-width: 500px) { .iot-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .stat-value { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); }
         .collapsible-header {
             display: flex;
             align-items: center;
@@ -288,6 +305,18 @@
 
         <!-- IoT Panel -->
         <div id="panel-iot" class="panel active">
+            <div class="card">
+                <h2>Time series collection stats</h2>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem" id="iot-bucketing-info">Buckets group measurements by metadata and time.</p>
+                <div class="iot-stats-grid" id="iot-stats">
+                    <div class="stat-item"><span class="stat-value" id="stat-docs">-</span><span class="stat-label">Documents</span></div>
+                    <div class="stat-item"><span class="stat-value" id="stat-buckets">-</span><span class="stat-label">Buckets</span></div>
+                    <div class="stat-item"><span class="stat-value" id="stat-storage">-</span><span class="stat-label">Storage</span></div>
+                    <div class="stat-item"><span class="stat-value" id="stat-index">-</span><span class="stat-label">Index size</span></div>
+                </div>
+                <button type="button" id="iot-stats-refresh" style="margin-top:0.75rem">Refresh stats</button>
+            </div>
+
             <div class="card">
                 <h2>Ingestion demo</h2>
                 <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Send 1000 measurements over 5 minutes to demonstrate ingestion. Start the live feed first to watch them arrive in real time.</p>
@@ -418,6 +447,38 @@
             el.style.display = 'none';
         }
 
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function refreshIotStats() {
+            const el = document.getElementById('iot-stats');
+            try {
+                const res = await fetch(API + '/iot/stats');
+                if (!res.ok) throw new Error(res.statusText);
+                const data = await res.json();
+                document.getElementById('stat-docs').textContent = data.documentCount?.toLocaleString() ?? '-';
+                document.getElementById('stat-buckets').textContent = data.bucketCount?.toLocaleString() ?? '-';
+                document.getElementById('stat-storage').textContent = formatBytes(data.storageSizeBytes || 0);
+                document.getElementById('stat-index').textContent = formatBytes(data.indexSizeBytes || 0);
+                if (data.bucketingInfo) {
+                    document.getElementById('iot-bucketing-info').textContent = data.bucketingInfo;
+                }
+            } catch (e) {
+                document.getElementById('stat-docs').textContent = 'Error';
+                document.getElementById('stat-buckets').textContent = '-';
+                document.getElementById('stat-storage').textContent = '-';
+                document.getElementById('stat-index').textContent = '-';
+            }
+        }
+
+        document.getElementById('iot-stats-refresh').addEventListener('click', refreshIotStats);
+        refreshIotStats();
+
         // IoT: Live dashboard (polls last 10 readings every 2 seconds)
         let livePollInterval = null;
         let seenIds = new Set();
@@ -466,8 +527,12 @@
             };
             poll();
             livePollInterval = setInterval(poll, 1000);
+            const statsInterval = setInterval(refreshIotStats, 5000);
+            document.getElementById('live-stop-btn').dataset.statsInterval = statsInterval;
         });
         document.getElementById('live-stop-btn').addEventListener('click', () => {
+            const sid = document.getElementById('live-stop-btn').dataset.statsInterval;
+            if (sid) clearInterval(parseInt(sid));
             if (livePollInterval) clearInterval(livePollInterval);
             livePollInterval = null;
             seenIds.clear();

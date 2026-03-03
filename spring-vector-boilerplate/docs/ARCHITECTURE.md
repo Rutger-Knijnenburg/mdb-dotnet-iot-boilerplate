@@ -141,6 +141,7 @@ sequenceDiagram
 
 | Use Case | Trigger | Process | Storage |
 |----------|---------|---------|---------|
+| **IoT Stats** | User opens IoT tab or clicks "Refresh stats" | $collStats on time series collection | Documents, buckets, storage size, index size |
 | **IoT Ingestion** | User clicks "Start 5-minute ingestion" | 1000 readings scheduled over 5 min (~300ms each) | `sensor_readings` (time series) |
 | **IoT Live Feed** | User clicks "Start live feed" | Browser polls `/latest-readings` every 1s | Read from `sensor_readings` |
 | **IoT Query** | User submits device query | Query by deviceId + optional time range | Read from `sensor_readings` |
