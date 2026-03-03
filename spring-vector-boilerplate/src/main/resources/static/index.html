@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Vector Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f12;
+            --surface: #1a1a1f;
+            --surface-hover: #222228;
+            --border: #2d2d35;
+            --text: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .tab {
+            padding: 0.6rem 1.2rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .tab:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+        .tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .panel {
+            display: none;
+        }
+        .panel.active {
+            display: block;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        input, textarea, button {
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        input, textarea {
+            padding: 0.6rem 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        button {
+            padding: 0.6rem 1.2rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: var(--accent-hover);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        .message.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .message.error { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        .results {
+            margin-top: 1rem;
+        }
+        .result-item {
+            padding: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .result-item:last-child { margin-bottom: 0; }
+        .result-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+        .empty-state {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 2rem;
+            text-align: center;
+        }
+        .live-feed {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .live-feed .result-item {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .live-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+        .live-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        .live-status.connected .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .live-status .count { color: var(--text-muted); }
+        .sample-articles {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .sample-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .sample-checkbox:hover {
+            background: var(--surface-hover);
+        }
+        .sample-checkbox input {
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+        .search-mode-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.25rem;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .radio-label:has(input:checked) { color: var(--text); }
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            user-select: none;
+        }
+        .collapsible-header:hover { color: var(--text); }
+        .collapsible-header .chevron {
+            transition: transform 0.2s;
+        }
+        .collapsible-header.expanded .chevron { transform: rotate(90deg); }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease-out;
+        }
+        .collapsible-content.expanded {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .vector-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 700px) {
+            .vector-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Spring Vector Demo</h1>
+            <p class="subtitle">IoT time series & Vector Search with MongoDB Atlas</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="iot">IoT Sensor Readings</button>
+            <button class="tab" data-tab="vector">Vector Search</button>
+        </div>
+
+        <!-- IoT Panel -->
+        <div id="panel-iot" class="panel active">
+            <div class="card">
+                <h2>Ingestion demo</h2>
+                <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Send 1000 measurements over 5 minutes to demonstrate ingestion. Start the live feed first to watch them arrive in real time.</p>
+                <button type="button" id="iot-ingest-btn">Start 5-minute ingestion (1000 readings)</button>
+                <div id="iot-ingest-message" class="message" style="display:none"></div>
+            </div>
+
+            <div class="card">
+                <h2>Live dashboard</h2>
+                <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Polls the last 10 readings every 2 seconds. Start the feed, then run the ingestion demo above.</p>
+                <div class="live-status" id="live-status">
+                    <span class="dot"></span>
+                    <span id="live-status-text">Disconnected</span>
+                    <span class="count" id="live-count"></span>
+                </div>
+                <button type="button" id="live-start-btn">Start live feed</button>
+                <button type="button" id="live-stop-btn" style="display:none;margin-left:0.5rem;background:var(--surface);border:1px solid var(--border);color:var(--text)">Stop</button>
+                <div id="live-feed" class="live-feed results" style="margin-top:1rem"></div>
+            </div>
+
+            <div class="card">
+                <h2>Query readings by device</h2>
+                <form id="iot-query-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Device ID</label>
+                            <input type="text" name="deviceId" placeholder="sensor-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Start (ISO)</label>
+                            <input type="text" name="start" placeholder="2025-01-01T00:00:00Z">
+                        </div>
+                        <div class="form-group">
+                            <label>End (ISO)</label>
+                            <input type="text" name="end" placeholder="2025-12-31T23:59:59Z">
+                        </div>
+                    </div>
+                    <button type="submit">Query</button>
+                </form>
+                <div id="iot-query-message" class="message" style="display:none"></div>
+                <div id="iot-results" class="results"></div>
+            </div>
+        </div>
+
+        <!-- Vector Search Panel -->
+        <div id="panel-vector" class="panel">
+            <div class="vector-grid">
+                <div class="card">
+                    <h2>Add documents</h2>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">Pick sample articles or add your own text to embed.</p>
+                    <div class="collapsible-header" id="sample-articles-toggle" role="button" tabindex="0" aria-expanded="false">
+                        <span>Sample articles (5)</span>
+                        <span class="chevron">▶</span>
+                    </div>
+                    <div class="collapsible-content" id="sample-articles-content">
+                        <div class="sample-articles" id="sample-articles">
+                            <label class="sample-checkbox" data-content="Spring Boot simplifies building production-ready Java applications with auto-configuration, embedded servers, and a rich ecosystem of starters."><input type="checkbox" name="sample"> Spring Boot simplifies building production-ready Java applications with auto-configuration, embedded servers, and a rich ecosystem of starters.</label>
+                            <label class="sample-checkbox" data-content="MongoDB is a document database that stores data in flexible JSON-like documents, making it ideal for evolving schemas and horizontal scaling."><input type="checkbox" name="sample"> MongoDB is a document database that stores data in flexible JSON-like documents, making it ideal for evolving schemas and horizontal scaling.</label>
+                            <label class="sample-checkbox" data-content="Vector search uses embeddings to find semantically similar content rather than exact keyword matches, enabling natural language queries."><input type="checkbox" name="sample"> Vector search uses embeddings to find semantically similar content rather than exact keyword matches, enabling natural language queries.</label>
+                            <label class="sample-checkbox" data-content="Embedding models convert text into dense numerical vectors that capture meaning, allowing similarity comparisons across large document collections."><input type="checkbox" name="sample"> Embedding models convert text into dense numerical vectors that capture meaning, allowing similarity comparisons across large document collections.</label>
+                            <label class="sample-checkbox" data-content="REST APIs expose resources over HTTP with standard methods like GET and POST, enabling loose coupling between clients and services."><input type="checkbox" name="sample"> REST APIs expose resources over HTTP with standard methods like GET and POST, enabling loose coupling between clients and services.</label>
+                        </div>
+                        <button type="button" id="vector-add-samples-btn" style="margin-top:0.75rem">Add selected</button>
+                    </div>
+                    <form id="vector-add-form" style="margin-top:1rem">
+                        <div class="form-group full">
+                            <label>Custom content (one per line)</label>
+                            <textarea name="content" placeholder="Your text here..." rows="2"></textarea>
+                        </div>
+                        <button type="submit">Add custom</button>
+                    </form>
+                    <div id="vector-add-message" class="message" style="display:none"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Search</h2>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">Semantic (meaning) or hybrid (meaning + keywords).</p>
+                    <form id="vector-search-form">
+                        <div class="form-group full">
+                            <label>Query</label>
+                            <input type="text" name="query" placeholder="e.g. Java framework for web apps" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mode</label>
+                                <div class="search-mode-group">
+                                    <label class="radio-label"><input type="radio" name="mode" value="semantic" checked> Semantic</label>
+                                    <label class="radio-label"><input type="radio" name="mode" value="hybrid"> Hybrid</label>
+                                </div>
+                            </div>
+                            <div class="form-group" id="vector-weight-group" style="display:none">
+                                <label>Vector weight</label>
+                                <input type="number" name="vectorWeight" value="0.5" min="0" max="1" step="0.1" title="0=keyword only, 1=semantic only">
+                            </div>
+                            <div class="form-group">
+                                <label>Top K</label>
+                                <input type="number" name="topK" value="5" min="1" max="20">
+                            </div>
+                            <button type="submit">Search</button>
+                        </div>
+                    </form>
+                    <div id="vector-search-message" class="message" style="display:none"></div>
+                    <div id="vector-results" class="results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+
+        // Tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        function showMessage(el, text, type) {
+            el.textContent = text;
+            el.className = 'message ' + type;
+            el.style.display = 'block';
+        }
+        function hideMessage(el) {
+            el.style.display = 'none';
+        }
+
+        // IoT: Live dashboard (polls last 10 readings every 2 seconds)
+        let livePollInterval = null;
+        let seenIds = new Set();
+        document.getElementById('live-start-btn').addEventListener('click', () => {
+            if (livePollInterval) return;
+            document.getElementById('live-status').classList.add('connected');
+            document.getElementById('live-status-text').textContent = 'Polling...';
+            document.getElementById('live-start-btn').style.display = 'none';
+            document.getElementById('live-stop-btn').style.display = '';
+            const poll = async () => {
+                try {
+                    const res = await fetch(API + '/iot/latest-readings?limit=10');
+                    if (!res.ok) { console.warn('Latest readings fetch failed:', res.status); return; }
+                    const data = await res.json();
+                    if (!Array.isArray(data)) return;
+                    const feed = document.getElementById('live-feed');
+                    let newCount = 0;
+                    for (const r of data) {
+                        const meta = r.metadata || {};
+                        const id = r.id || (r.timestamp + (meta.deviceId || r.deviceId || ''));
+                        if (!seenIds.has(id)) {
+                            seenIds.add(id);
+                            newCount++;
+                            feed.querySelector('.empty-state')?.remove();
+                            const deviceId = meta.deviceId || r.deviceId || '';
+                            const location = meta.location || r.location || '';
+                            const item = document.createElement('div');
+                            item.className = 'result-item';
+                            item.innerHTML = '<div><strong>' + deviceId + '</strong> @ ' + location + ' — ' +
+                                (r.temperature || 0).toFixed(1) + '°C, ' + (r.humidity || 0).toFixed(1) + '% humidity, ' + (r.pressure || 0).toFixed(1) + ' hPa</div>' +
+                                '<div class="result-meta">' + (r.timestamp || '') + '</div>';
+                            feed.insertBefore(item, feed.firstChild);
+                        }
+                    }
+                    if (newCount > 0) {
+                        document.getElementById('live-count').textContent = seenIds.size + ' total';
+                        document.getElementById('live-status-text').textContent = 'Live';
+                        while (feed.children.length > 50) feed.lastChild.remove();
+                    }
+                    if (data.length === 0 && feed.children.length === 0) {
+                        feed.innerHTML = '<div class="empty-state">No readings yet. Run the ingestion demo above.</div>';
+                    } else if (feed.querySelector('.empty-state')) {
+                        feed.querySelector('.empty-state')?.remove();
+                    }
+                } catch (e) { console.warn('Poll error:', e); }
+            };
+            poll();
+            livePollInterval = setInterval(poll, 1000);
+        });
+        document.getElementById('live-stop-btn').addEventListener('click', () => {
+            if (livePollInterval) clearInterval(livePollInterval);
+            livePollInterval = null;
+            seenIds.clear();
+            document.getElementById('live-status').classList.remove('connected');
+            document.getElementById('live-status-text').textContent = 'Disconnected';
+            document.getElementById('live-count').textContent = '';
+            document.getElementById('live-start-btn').style.display = '';
+            document.getElementById('live-stop-btn').style.display = 'none';
+        });
+
+        // IoT: 5-minute ingestion demo
+        document.getElementById('iot-ingest-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('iot-ingest-btn');
+            const msg = document.getElementById('iot-ingest-message');
+            btn.disabled = true;
+            hideMessage(msg);
+            try {
+                const res = await fetch(API + '/iot/readings/ingest-demo', { method: 'POST' });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                showMessage(msg, data.message, 'success');
+            } catch (err) {
+                showMessage(msg, err.message || 'Failed to start ingestion', 'error');
+                btn.disabled = false;
+            }
+            setTimeout(() => { btn.disabled = false; }, 1000);
+        });
+
+        // IoT: Query readings
+        document.getElementById('iot-query-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const msg = document.getElementById('iot-query-message');
+            const resultsEl = document.getElementById('iot-results');
+            const btn = form.querySelector('button[type=submit]');
+            btn.disabled = true;
+            hideMessage(msg);
+            resultsEl.innerHTML = '';
+            try {
+                let url = API + '/iot/readings/' + encodeURIComponent(form.deviceId.value);
+                const start = form.start.value?.trim();
+                const end = form.end.value?.trim();
+                if (start && end) url += '?start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end);
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                if (!data.length) {
+                    resultsEl.innerHTML = '<div class="empty-state">No readings found for this device.</div>';
+                } else {
+                    resultsEl.innerHTML = data.map(r => `
+                        <div class="result-item">
+                            <div>Temp: ${r.temperature}°C | Humidity: ${r.humidity}% | Pressure: ${r.pressure} hPa</div>
+                            <div class="result-meta">${r.timestamp || ''} | ${r.metadata?.location || ''}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                showMessage(msg, err.message || 'Failed to query', 'error');
+            }
+            btn.disabled = false;
+        });
+
+        // Vector: Collapsible sample articles
+        const sampleToggle = document.getElementById('sample-articles-toggle');
+        const sampleContent = document.getElementById('sample-articles-content');
+        sampleToggle.addEventListener('click', () => {
+            sampleToggle.classList.toggle('expanded');
+            sampleContent.classList.toggle('expanded');
+            sampleToggle.setAttribute('aria-expanded', sampleContent.classList.contains('expanded'));
+        });
+        sampleToggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                sampleToggle.click();
+            }
+        });
+
+        // Vector: Add selected sample articles
+        document.getElementById('vector-add-samples-btn').addEventListener('click', async () => {
+            const msg = document.getElementById('vector-add-message');
+            const btn = document.getElementById('vector-add-samples-btn');
+            const checked = document.querySelectorAll('#sample-articles input[name=sample]:checked');
+            btn.disabled = true;
+            hideMessage(msg);
+            if (!checked.length) {
+                showMessage(msg, 'Select at least one article', 'error');
+                btn.disabled = false;
+                return;
+            }
+            try {
+                const documents = Array.from(checked).map(cb => {
+                    const label = cb.closest('.sample-checkbox');
+                    return { content: label.dataset.content, metadata: {} };
+                });
+                const res = await fetch(API + '/vector/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documents })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                showMessage(msg, documents.length + ' article(s) added successfully', 'success');
+                checked.forEach(cb => { cb.checked = false; });
+            } catch (err) {
+                showMessage(msg, err.message || 'Failed to add articles', 'error');
+            }
+            btn.disabled = false;
+        });
+
+        // Vector: Add custom documents
+        document.getElementById('vector-add-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const msg = document.getElementById('vector-add-message');
+            const btn = form.querySelector('button[type=submit]');
+            btn.disabled = true;
+            hideMessage(msg);
+            try {
+                const lines = form.content.value.split('\n').map(s => s.trim()).filter(Boolean);
+                if (!lines.length) throw new Error('Enter at least one document');
+                const documents = lines.map(content => ({ content, metadata: {} }));
+                const res = await fetch(API + '/vector/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documents })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                showMessage(msg, 'Documents added successfully', 'success');
+                form.reset();
+            } catch (err) {
+                showMessage(msg, err.message || 'Failed to add documents', 'error');
+            }
+            btn.disabled = false;
+        });
+
+        // Vector: Search mode toggle (show vector weight when hybrid)
+        document.querySelectorAll('input[name=mode]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.getElementById('vector-weight-group').style.display =
+                    document.querySelector('input[name=mode]:checked').value === 'hybrid' ? 'block' : 'none';
+            });
+        });
+
+        // Vector: Search
+        document.getElementById('vector-search-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const msg = document.getElementById('vector-search-message');
+            const resultsEl = document.getElementById('vector-results');
+            const btn = form.querySelector('button[type=submit]');
+            btn.disabled = true;
+            hideMessage(msg);
+            resultsEl.innerHTML = '';
+            try {
+                const mode = form.mode?.value || 'semantic';
+                let url = API + '/vector/search?query=' + encodeURIComponent(form.query.value) + '&topK=' + (form.topK.value || 5) + '&mode=' + mode;
+                if (mode === 'hybrid') url += '&vectorWeight=' + (form.vectorWeight?.value || 0.5);
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                if (!data.length) {
+                    resultsEl.innerHTML = '<div class="empty-state">No results found. Add documents first.</div>';
+                } else {
+                    resultsEl.innerHTML = data.map((r) => {
+                        const metaParts = [];
+                        if (r.score != null) metaParts.push('Score: ' + r.score.toFixed(4));
+                        if (Object.keys(r.metadata || {}).length) metaParts.push(JSON.stringify(r.metadata));
+                        return `<div class="result-item">
+                            <div>${r.content}</div>
+                            ${metaParts.length ? '<div class="result-meta">' + metaParts.join(' · ') + '</div>' : ''}
+                        </div>`;
+                    }).join('');
+                }
+            } catch (err) {
+                showMessage(msg, err.message || 'Search failed', 'error');
+            }
+            btn.disabled = false;
+        });
+    </script>
+</body>
+</html>

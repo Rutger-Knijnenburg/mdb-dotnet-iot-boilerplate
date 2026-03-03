@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: spring-vector-boilerplate
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.vectorstore.mongo.MongoDBAtlasVectorStoreAutoConfiguration
+  config:
+    import: optional:file:.env[.properties]
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017}
+      database: ${MONGODB_DATABASE:spring_vector_demo}
+
+# Vector Search (Atlas API + Voyage AI)
+vector:
+  atlas:
+    api-key: ${ATLAS_API_KEY:}
+    base-url: https://ai.mongodb.com/v1
+  store:
+    collection-name: ${VECTOR_COLLECTION:vector_store}
+    index-name: ${VECTOR_INDEX:vector_index}
+    embedding-model: ${VECTOR_EMBEDDING_MODEL:voyage-4-large}
+    initialize-schema: true
