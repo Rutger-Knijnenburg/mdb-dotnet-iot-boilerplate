@@ -26,13 +26,16 @@ public class IotController {
     private final MongoTemplate mongoTemplate;
     private final IngestionDemoService ingestionDemoService;
     private final IotStatsService statsService;
+    private final IotAggregationService aggregationService;
 
     public IotController(SensorReadingRepository repository, MongoTemplate mongoTemplate,
-                         IngestionDemoService ingestionDemoService, IotStatsService statsService) {
+                         IngestionDemoService ingestionDemoService, IotStatsService statsService,
+                         IotAggregationService aggregationService) {
         this.repository = repository;
         this.mongoTemplate = mongoTemplate;
         this.ingestionDemoService = ingestionDemoService;
         this.statsService = statsService;
+        this.aggregationService = aggregationService;
     }
 
     @GetMapping("/stats")
@@ -84,6 +87,16 @@ public class IotController {
             return repository.findByMetadata_DeviceIdAndTimestampBetween(deviceId, start, end);
         }
         return repository.findByMetadata_DeviceId(deviceId);
+    }
+
+    @GetMapping("/aggregations")
+    public IotAggregationService.AggregationResult runAggregation(
+            @RequestParam String op,
+            @RequestParam(required = false, defaultValue = "temperature") String field,
+            @RequestParam(required = false) String deviceId,
+            @RequestParam(required = false) Instant start,
+            @RequestParam(required = false) Instant end) {
+        return aggregationService.run(op, field, deviceId, start, end);
     }
 }
 

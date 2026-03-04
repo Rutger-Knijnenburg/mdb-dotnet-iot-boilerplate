@@ -110,6 +110,16 @@
             color: var(--text-muted);
             font-weight: 500;
         }
+        select {
+            font-family: inherit;
+            font-size: 0.9rem;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+        }
+        select:focus { outline: none; border-color: var(--accent); }
         input, textarea, button {
             font-family: inherit;
             font-size: 0.9rem;
@@ -338,6 +348,47 @@
             </div>
 
             <div class="card">
+                <h2>Aggregations</h2>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">Compute avg, max, min, or count over a time window. Optional device filter.</p>
+                <form id="iot-agg-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Operation</label>
+                            <select name="op">
+                                <option value="avg">Average</option>
+                                <option value="max">Max</option>
+                                <option value="min">Min</option>
+                                <option value="count">Count</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="agg-field-group">
+                            <label>Field</label>
+                            <select name="field">
+                                <option value="temperature">Temperature</option>
+                                <option value="humidity">Humidity</option>
+                                <option value="pressure">Pressure</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Device ID</label>
+                            <input type="text" name="deviceId" placeholder="sensor-001 (optional)">
+                        </div>
+                        <div class="form-group">
+                            <label>Start (ISO)</label>
+                            <input type="text" name="start" placeholder="2025-01-01T00:00:00Z">
+                        </div>
+                        <div class="form-group">
+                            <label>End (ISO)</label>
+                            <input type="text" name="end" placeholder="2025-12-31T23:59:59Z">
+                        </div>
+                    </div>
+                    <button type="submit">Run aggregation</button>
+                </form>
+                <div id="iot-agg-message" class="message" style="display:none"></div>
+                <div id="iot-agg-result" class="results" style="margin-top:1rem"></div>
+            </div>
+
+            <div class="card">
                 <h2>Query readings by device</h2>
                 <form id="iot-query-form">
                     <div class="form-row">
@@ -559,6 +610,47 @@
                 btn.disabled = false;
             }
             setTimeout(() => { btn.disabled = false; }, 1000);
+        });
+
+        // IoT: Aggregation - hide field when count selected
+        document.querySelector('#iot-agg-form select[name=op]').addEventListener('change', function() {
+            document.getElementById('agg-field-group').style.display =
+                this.value === 'count' ? 'none' : 'block';
+        });
+
+        // IoT: Aggregations
+        document.getElementById('iot-agg-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const msg = document.getElementById('iot-agg-message');
+            const resultEl = document.getElementById('iot-agg-result');
+            const btn = form.querySelector('button[type=submit]');
+            btn.disabled = true;
+            hideMessage(msg);
+            resultEl.innerHTML = '';
+            try {
+                const op = form.op.value;
+                let url = API + '/iot/aggregations?op=' + encodeURIComponent(op);
+                if (op !== 'count') url += '&field=' + encodeURIComponent(form.field.value);
+                const deviceId = form.deviceId.value?.trim();
+                if (deviceId) url += '&deviceId=' + encodeURIComponent(deviceId);
+                const start = form.start.value?.trim();
+                const end = form.end.value?.trim();
+                if (start) url += '&start=' + encodeURIComponent(start);
+                if (end) url += '&end=' + encodeURIComponent(end);
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                const val = data.value;
+                const valStr = typeof val === 'number' ? (Number.isInteger(val) ? val : val.toFixed(2)) : val;
+                const units = { temperature: '°C', humidity: '%', pressure: ' hPa' };
+                const suffix = op !== 'count' && form.field.value && units[form.field.value] ? units[form.field.value] : '';
+                const filter = [deviceId && ('device=' + deviceId), start && ('start=' + start), end && ('end=' + end)].filter(Boolean).join(', ');
+                resultEl.innerHTML = '<div class="result-item"><strong>' + op.toUpperCase() + (op !== 'count' ? ' ' + form.field.value : '') + '</strong>: ' + (valStr ?? 'N/A') + suffix + (filter ? '<div class="result-meta">' + filter + '</div>' : '') + '</div>';
+            } catch (err) {
+                showMessage(msg, err.message || 'Aggregation failed', 'error');
+            }
+            btn.disabled = false;
         });
 
         // IoT: Query readings

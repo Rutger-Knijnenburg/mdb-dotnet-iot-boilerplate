@@ -35,6 +35,7 @@ Sample demo project showcasing **IoT** and **Vector Search** use cases with Spri
 - **GET** `/api/iot/readings/{deviceId}` – get readings by device (optional `start`/`end` query params)
 - **GET** `/api/iot/latest-readings?limit=10` – Last 10 readings (for live dashboard)
 - **GET** `/api/iot/stats` – collection stats (documents, buckets, storage size, index size)
+- **GET** `/api/iot/aggregations?op=avg|max|min|count&field=temperature|humidity|pressure&deviceId=...&start=...&end=...` – run aggregations over a time window
 
 Example:
 
